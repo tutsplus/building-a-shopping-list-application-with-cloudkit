@@ -143,6 +143,80 @@ extension ListsViewController{
         return cell
     }
 
+    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        
+        guard editingStyle == .delete else { return }
+        
+        // Fetch Record
+        let list = lists[indexPath.row]
+        
+        // Delete Record
+        deleteRecord(list)
+    }
+    
+    private func deleteRecord(_ list: CKRecord) {
+        // Fetch Private Database
+        let privateDatabase = CKContainer.default().privateCloudDatabase
+        
+        // Show Progress HUD
+        SVProgressHUD.show()
+        
+        // Delete List
+        privateDatabase.delete(withRecordID: list.recordID) { (recordID, error) -> Void in
+            DispatchQueue.main.sync {
+                SVProgressHUD.dismiss()
+                
+                // Process Response
+                self.processResponseForDeleteRequest(list, recordID: recordID, error: error)
+            }
+        }
+    }
+    
+    private func processResponseForDeleteRequest(_ record: CKRecord, recordID: CKRecordID?, error: Error?) {
+        var message = ""
+        
+        if let error = error {
+            print(error)
+            message = "We are unable to delete the list."
+            
+        } else if recordID == nil {
+            message = "We are unable to delete the list."
+        }
+        
+        if message.isEmpty {
+            // Calculate Row Index
+            let index = self.lists.index(of: record)
+            
+            if let index = index {
+                // Update Data Source
+                self.lists.remove(at: index)
+                
+                if lists.count > 0 {
+                    // Update Table View
+                    self.tableView.deleteRows(at: [NSIndexPath(row: index, section: 0) as IndexPath], with: .right)
+                    
+                } else {
+                    // Update Message Label
+                    messageLabel.text = "No Records Found"
+                    
+                    // Update View
+                    updateView()
+                }
+            }
+            
+        } else {
+            // Initialize Alert Controller
+            let alertController = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+            
+            // Present Alert Controller
+            present(alertController, animated: true, completion: nil)
+        }
+    }
+    
     func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
        
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
