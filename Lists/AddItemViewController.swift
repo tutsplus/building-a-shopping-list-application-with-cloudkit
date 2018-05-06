@@ -1,8 +1,8 @@
 //
-//  AddListViewController.swift
+//  AddItemViewController.swift
 //  Lists
 //
-//  Created by Doron Katz on 4/29/18.
+//  Created by Doron Katz on 5/4/18.
 //  Copyright © 2018 Tuts+. All rights reserved.
 //  Revised from original author: Bart Jacobs
 
@@ -10,20 +10,21 @@ import UIKit
 import CloudKit
 import SVProgressHUD
 
-protocol AddListViewControllerDelegate {
-    func controller(controller: AddListViewController, didAddList list: CKRecord)
-    func controller(controller: AddListViewController, didUpdateList list: CKRecord)
+protocol AddItemViewControllerDelegate {
+    func controller(controller: AddItemViewController, didAddItem item: CKRecord)
+    func controller(controller: AddItemViewController, didUpdateItem item: CKRecord)
 }
 
-class AddListViewController: UIViewController {
+class AddItemViewController: UIViewController {
     
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var saveButton: UIBarButtonItem!
     
-    var delegate: AddListViewControllerDelegate?
-    var newList: Bool = true
+    var delegate: AddItemViewControllerDelegate?
+    var newItem: Bool = true
     
-    var list: CKRecord?
+    var list: CKRecord!
+    var item: CKRecord?
     
     // MARK: -
     // MARK: View Life Cycle
@@ -33,11 +34,10 @@ class AddListViewController: UIViewController {
         self.setupView()
         
         // Update Helper
-        self.newList = self.list == nil
-        
+        newItem = item == nil
         // Add Observer
         let notificationCenter = NotificationCenter.default
-        notificationCenter.addObserver(self, selector: #selector(AddListViewController.textFieldTextDidChange(notification:)), name: NSNotification.Name.UITextFieldTextDidChange, object: nameTextField)
+        notificationCenter.addObserver(self, selector: #selector(AddItemViewController.textFieldTextDidChange(notification:)), name: NSNotification.Name.UITextFieldTextDidChange, object: nameTextField)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -52,10 +52,11 @@ class AddListViewController: UIViewController {
     
     // MARK: -
     private func updateNameTextField() {
-        if let name = list?.object(forKey: "name") as? String {
+        if let name = item?.object(forKey: "name") as? String {
             nameTextField.text = name
         }
     }
+
     
     // MARK: -
     private func updateSaveButton() {
@@ -79,6 +80,7 @@ class AddListViewController: UIViewController {
         self.navigationController?.popViewController(animated: true)
     }
     
+    
     @IBAction func save(sender: AnyObject) {
         
         // Helpers
@@ -87,18 +89,26 @@ class AddListViewController: UIViewController {
         // Fetch Private Database
         let privateDatabase = CKContainer.default().privateCloudDatabase
         
-        if list == nil {
-            list = CKRecord(recordType: "Lists")
+        if item == nil {
+            //create a record
+            item = CKRecord(recordType: RecordTypeItems)
+            print ("created record \(list.recordID)")
+            // Initialize Reference
+            let listReference = CKReference(recordID: list.recordID, action: .deleteSelf)
+            
+            // Configure Record
+            item?.setObject(listReference, forKey: "list")
+            
         }
         
         // Configure Record
-        list?.setObject(name, forKey: "name")
+        item?.setObject(name, forKey: "name")
         
         // Show Progress HUD
         SVProgressHUD.show()
         
         // Save Record
-        privateDatabase.save(list!) { (record, error) -> Void in
+        privateDatabase.save(item!) { (record, error) -> Void in
             DispatchQueue.main.sync {
                 // Dismiss Progress HUD
                 SVProgressHUD.dismiss()
@@ -106,7 +116,7 @@ class AddListViewController: UIViewController {
                 // Process Response
                 self.processResponse(record: record, error: error)
             }
-
+            
         }
     }
     
@@ -132,10 +142,10 @@ class AddListViewController: UIViewController {
             
         } else {
             // Notify Delegate
-            if newList {
-                delegate?.controller(controller: self, didAddList: list!)
+            if newItem {
+                delegate?.controller(controller: self, didAddItem: item!)
             } else {
-                delegate?.controller(controller: self, didUpdateList: list!)
+                delegate?.controller(controller: self, didUpdateItem: item!)
             }
             
             // Pop View Controller

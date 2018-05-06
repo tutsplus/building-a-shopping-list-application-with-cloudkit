@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  Lists
+//  List
 //
 //  Created by Doron Katz on 4/23/18.
 //  Copyright © 2018 Tuts+. All rights reserved.
@@ -10,163 +10,83 @@ import UIKit
 import CloudKit
 import SVProgressHUD
 
+let SegueItemDetail = "ItemDetail"
 
-let RecordTypeLists = "Lists"
-let RecordTypeItems = "Items"
-
-let SegueList = "List"
-let SegueListDetail = "ListDetail"
-
-class ListsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource{
-    static let ListCell = "ListCell"
+class ListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource{
+    static let ItemCell = "ItemCell"
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var messageLabel: UILabel!
     @IBOutlet weak var activityIndicatorView: UIActivityIndicatorView!
     
-    var lists = [CKRecord]()
+    var list: CKRecord!
+    var items = [CKRecord]()
+    
     var selection: Int?
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = self.list.object(forKey: "name") as? String
         setupView()
-        self.messageLabel.text = "Loading records"
-        fetchLists()
-    }
-    
-    // MARK: -
-    // MARK: Segue Life Cycle
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard let identifier = segue.identifier else { return }
-        
-        switch identifier {
-        case SegueList:
-            // Fetch Destination View Controller
-            let listViewController = segue.destination as! ListViewController
-            
-            // Fetch Selection
-            let list = lists[tableView.indexPathForSelectedRow!.row]
-            
-            // Configure View Controller
-            listViewController.list = list
-        case SegueListDetail:
-            // Fetch Destination View Controller
-            let addListViewController = segue.destination as! AddListViewController
-            
-            // Configure View Controller
-            addListViewController.delegate = self
-            
-            if let selection = selection {
-                // Fetch List
-                let list = lists[selection]
-                
-                // Configure View Controller
-                addListViewController.list = list
-            }
-        default:
-            break
-        }
+        fetchItems()
     }
     
     
     private func updateView(){
-        let hasRecords = self.lists.count > 0
+        let hasRecords = self.items.count > 0
         
         self.tableView.isHidden = !hasRecords
         messageLabel.isHidden = hasRecords
         activityIndicatorView.stopAnimating()
     }
-
-    private func fetchLists() {
-        // Fetch Private Database
-        let privateDatabase = CKContainer.default().privateCloudDatabase
-        
-        // Initialize Query
-        let query = CKQuery(recordType: "Lists", predicate: NSPredicate(value: true))
-        
-        // Configure Query
-        query.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-        
-        // Perform Query
-        privateDatabase.perform(query, inZoneWith: nil) { (records, error) in
-            records?.forEach({ (record) in
-                
-                guard error == nil else{
-                    print(error?.localizedDescription as Any)
-                    return
-                }
-                
-                print(record.value(forKey: "name") ?? "")
-                self.lists.append(record)
-                DispatchQueue.main.sync {
-                    self.tableView.reloadData()
-                    self.messageLabel.text = ""
-                    self.updateView()
-                }
-            })
-
-        }
-    }
     
-    
-    
-//    private func fetchUserRecord(recordID: CKRecordID) {
-//        // Fetch Default Container
-//        let defaultContainer = CKContainer.default()
-//
-//        // Fetch Private Database
-//        let privateDatabase = defaultContainer.privateCloudDatabase
-//
-//        // Fetch User Record
-//        privateDatabase.fetch(withRecordID: recordID) { (record, error) -> Void in
-//            if let responseError = error {
-//                print(responseError)
-//
-//            } else if let userRecord = record {
-//                print(userRecord)
-//            }
-//        }
-//    }
-
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
+    
 }
 
 // MARK: -
 // MARK: UITableView Delegate Methods
-extension ListsViewController{
+extension ListViewController{
     
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return lists.count
+        return self.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // Dequeue Reusable Cell
-        let cell = tableView.dequeueReusableCell(withIdentifier: ListsViewController.ListCell, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: ListViewController.ItemCell, for: indexPath)
         
         // Configure Cell
         cell.accessoryType = .detailDisclosureButton
         
         // Fetch Record
-        let list = lists[indexPath.row]
+        let item = items[indexPath.row]
         
-        if let listName = list.object(forKey: "name") as? String {
+        if let itemName = item.object(forKey: "name") as? String {
             // Configure Cell
-            cell.textLabel?.text = listName
+            cell.textLabel?.text = itemName
             
         } else {
             cell.textLabel?.text = "-"
         }
         
+        if let itemNumber = item.object(forKey: "number") as? Int {
+            // Configure Cell
+            cell.detailTextLabel?.text = "\(itemNumber)"
+            
+        } else {
+            cell.detailTextLabel?.text = "1"
+        }
+        
         return cell
     }
-
+    
     func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
         return true
     }
@@ -176,25 +96,23 @@ extension ListsViewController{
         guard editingStyle == .delete else { return }
         
         // Fetch Record
-        let list = lists[indexPath.row]
+        let item = items[indexPath.row]
         
         // Delete Record
-        deleteRecord(list)
+        deleteRecord(item)
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath as IndexPath, animated: true)
-    }
     
-    func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+    func tableView(tableView: UITableView, accessoryButtonTappedForRowWithIndexPath indexPath: NSIndexPath) {
         tableView.deselectRow(at: indexPath as IndexPath, animated: true)
         
         // Save Selection
         selection = indexPath.row
         
         // Perform Segue
-        performSegue(withIdentifier: SegueListDetail, sender: self)
+        performSegue(withIdentifier: SegueItemDetail, sender: self)
     }
+
     
     
     private func deleteRecord(_ list: CKRecord) {
@@ -228,13 +146,14 @@ extension ListsViewController{
         
         if message.isEmpty {
             // Calculate Row Index
-            let index = self.lists.index(of: record)
+            
+            let index = self.items.index(of: record)
             
             if let index = index {
                 // Update Data Source
-                self.lists.remove(at: index)
+                self.items.remove(at: index)
                 
-                if lists.count > 0 {
+                if items.count > 0 {
                     // Update Table View
                     self.tableView.deleteRows(at: [NSIndexPath(row: index, section: 0) as IndexPath], with: .right)
                     
@@ -255,13 +174,50 @@ extension ListsViewController{
             present(alertController, animated: true, completion: nil)
         }
     }
-
-
+    
+    func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        
+        tableView.deselectRow(at: indexPath as IndexPath, animated: true)
+        
+        // Save Selection
+        selection = indexPath.row
+        
+        // Perform Segue
+        performSegue(withIdentifier: "ListDetail", sender: self)
+    }
+    
+    // MARK: -
+    // MARK: Segue Life Cycle
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        guard let identifier = segue.identifier else { return }
+        
+        switch identifier {
+        case SegueItemDetail:
+            // Fetch Destination View Controller
+            let addItemViewController = segue.destination as! AddItemViewController
+            
+            // Configure View Controller
+            addItemViewController.list = list
+            addItemViewController.delegate = self
+            
+            if let selection = self.selection {
+                // Fetch Item
+                let item = items[selection]
+                
+                // Configure View Controller
+                addItemViewController.item = item
+            }
+        default:
+            break
+        }
+    }
+    
 }
 
 // MARK: -
 // MARK: View Methods
-extension ListsViewController{
+extension ListViewController{
     private func setupView(){
         tableView.isHidden = true
         messageLabel.isHidden = true
@@ -270,14 +226,14 @@ extension ListsViewController{
 }
 
 // MARK: -
-// MARK: AddListViewControllerDelegate methods
-extension ListsViewController: AddListViewControllerDelegate{
-    func controller(controller: AddListViewController, didAddList list: CKRecord) {
-        // Add List to Lists
-        lists.append(list)
+// MARK: AddItemViewControllerDelegate methods
+extension ListViewController: AddItemViewControllerDelegate{
+    func controller(controller: AddItemViewController, didAddItem item: CKRecord) {
+        // Add items
+        items.append(item)
         
-        // Sort Lists
-        sortLists()
+        // Sort Items
+        sortItems()
         
         // Update Table View
         tableView.reloadData()
@@ -286,16 +242,65 @@ extension ListsViewController: AddListViewControllerDelegate{
         updateView()
     }
     
-    func controller(controller: AddListViewController, didUpdateList list: CKRecord) {
-        sortLists()
+    func controller(controller: AddItemViewController, didUpdateItem item: CKRecord) {
+        // Sort Items
+        sortItems()
         
         // Update Table View
         tableView.reloadData()
     }
-
     
-    private func sortLists() {
-        self.lists.sort {
+    // MARK: -
+    // MARK: Helper Methods
+    private func fetchItems() {
+        // Fetch Private Database
+        let privateDatabase = CKContainer.default().privateCloudDatabase
+        
+        // Initialize Query
+        let reference = CKReference(recordID: list.recordID, action: .deleteSelf)
+        let query = CKQuery(recordType: RecordTypeItems, predicate: NSPredicate(format: "list == %@", reference))
+        
+        // Configure Query
+        query.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        
+        // Perform Query
+        privateDatabase.perform(query, inZoneWith: nil) { (records, error) -> Void in
+            DispatchQueue.main.sync {
+                self.processResponseForQuery(records, error: error)
+            }
+        }
+    }
+    
+    private func processResponseForQuery(_ records: [CKRecord]?, error: Error?) {
+        var message = ""
+        
+        if let error = error {
+            print(error)
+            message = "Error Fetching Items for List"
+            
+        } else if let records = records {
+            items = records
+            
+            if items.count == 0 {
+                message = "No Items Found"
+            }
+            
+        } else {
+            message = "No Items Found"
+        }
+        
+        if message.isEmpty {
+            tableView.reloadData()
+        } else {
+            messageLabel.text = message
+        }
+        
+        updateView()
+    }
+    
+    
+    private func sortItems() {
+        self.items.sort {
             var result = false
             let name0 = $0.object(forKey: "name") as? String
             let name1 = $1.object(forKey: "name") as? String

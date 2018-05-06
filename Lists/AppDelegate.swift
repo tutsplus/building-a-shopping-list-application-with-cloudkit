@@ -4,7 +4,7 @@
 //
 //  Created by Doron Katz on 4/23/18.
 //  Copyright © 2018 Tuts+. All rights reserved.
-//
+//  Revised from original author: Bart Jacobs
 
 import UIKit
 

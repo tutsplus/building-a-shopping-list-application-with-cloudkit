@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		79D11DE5F9D2B36C2D52B9C4 /* Pods_Lists.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00285A3E101A34B246268B61 /* Pods_Lists.framework */; };
+		C41F3EC5209CCD3100D733DA /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F3EC4209CCD3100D733DA /* ListViewController.swift */; };
+		C41F3EC7209CEDC700D733DA /* AddItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F3EC6209CEDC700D733DA /* AddItemViewController.swift */; };
 		C48C7DCF208EB73000F08846 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48C7DCE208EB73000F08846 /* AppDelegate.swift */; };
 		C48C7DD1208EB73000F08846 /* ListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48C7DD0208EB73000F08846 /* ListsViewController.swift */; };
 		C48C7DD4208EB73000F08846 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C48C7DD2208EB73000F08846 /* Main.storyboard */; };
@@ -20,6 +22,9 @@
 /* Begin PBXFileReference section */
 		00285A3E101A34B246268B61 /* Pods_Lists.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Lists.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A85320EA38BF1AD8D3B31DB4 /* Pods-Lists.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Lists.release.xcconfig"; path = "Pods/Target Support Files/Pods-Lists/Pods-Lists.release.xcconfig"; sourceTree = "<group>"; };
+		C41F3EC4209CCD3100D733DA /* ListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewController.swift; sourceTree = "<group>"; };
+		C41F3EC6209CEDC700D733DA /* AddItemViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemViewController.swift; sourceTree = "<group>"; };
+		C41F3EC8209E9FA100D733DA /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C48C7DCB208EB73000F08846 /* Lists.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lists.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C48C7DCE208EB73000F08846 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C48C7DD0208EB73000F08846 /* ListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewController.swift; sourceTree = "<group>"; };
@@ -70,6 +75,9 @@
 				C48C7DE0208EB8BD00F08846 /* Lists.entitlements */,
 				C48C7DCE208EB73000F08846 /* AppDelegate.swift */,
 				C48C7DD0208EB73000F08846 /* ListsViewController.swift */,
+				C41F3EC8209E9FA100D733DA /* README.md */,
+				C41F3EC4209CCD3100D733DA /* ListViewController.swift */,
+				C41F3EC6209CEDC700D733DA /* AddItemViewController.swift */,
 				C48C7DE42096A1CA00F08846 /* AddListViewController.swift */,
 				C48C7DD2208EB73000F08846 /* Main.storyboard */,
 				C48C7DD5208EB73200F08846 /* Assets.xcassets */,
@@ -233,8 +241,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C41F3EC7209CEDC700D733DA /* AddItemViewController.swift in Sources */,
 				C48C7DE52096A1CA00F08846 /* AddListViewController.swift in Sources */,
 				C48C7DD1208EB73000F08846 /* ListsViewController.swift in Sources */,
+				C41F3EC5209CCD3100D733DA /* ListViewController.swift in Sources */,
 				C48C7DCF208EB73000F08846 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
